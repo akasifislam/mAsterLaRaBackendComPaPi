@@ -2,7 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Resources\PostResource;
 use App\Models\Post;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Http\Request;
 
 class PostController extends Controller
@@ -17,7 +19,7 @@ class PostController extends Controller
         $posts = Post::all();
         $response = [
             'success' => true,
-            'data' => $posts,
+            'data' => PostResource::collection($posts),
             'message' => 'post successfully recived',
         ];
 
@@ -42,7 +44,27 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $input = $request->all();
+        $validator = Validator::make($input, [
+            'title' => 'required',
+            'content' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            $response = [
+                'success' => true,
+                'message' => $validator->errors(),
+            ];
+            return response()->json($response, 403);
+        } else {
+            $post = Post::create($input);
+            $response = [
+                'success' => true,
+                'data' => new PostResource($post),
+                'message' => 'post successfully created',
+            ];
+            return response()->json($response, 200);
+        }
     }
 
     /**
@@ -53,7 +75,25 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-        //
+        // ==   this is normal controller ======== 
+        // return response()->json($post, 200);
+
+
+        // ==========  this is collection controller ============= 
+        if (is_null($post)) {
+            $response = [
+                "success" => false,
+                "message" => "Post Not Found"
+            ];
+            return response()->json($response, 403);
+        } else {
+            $response = [
+                "success" => true,
+                "data" => new PostResource($post),
+                "message" => "Post Successfully Recived"
+            ];
+            return response()->json($response, 200);
+        }
     }
 
     /**
@@ -76,7 +116,33 @@ class PostController extends Controller
      */
     public function update(Request $request, Post $post)
     {
-        //
+        $input = $request->all();
+        $validator = Validator::make($input, [
+            'title' => 'required',
+            'content' => 'required'
+        ]);
+
+        if ($validator->fails()) {
+            $response = [
+                'success' => true,
+                'message' => $validator->errors(),
+            ];
+            return response()->json($response, 403);
+        } else {
+
+            // $post->update($request->all());
+            // return response()->json('Category updated!');
+
+            $post->title = $input['title'];
+            $post->content = $input['content'];
+            $post->save();
+            $response = [
+                'success' => true,
+                'data' => new PostResource($post),
+                'message' => 'post successfully created',
+            ];
+            return response()->json($response, 200);
+        }
     }
 
     /**
@@ -87,6 +153,15 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
-        //
+        $post->delete();
+
+
+        $response = [
+            'success' => true,
+            'data' => [],
+            'message' => "post successfully deleted"
+        ];
+
+        return response()->json($response, 200);
     }
 }
