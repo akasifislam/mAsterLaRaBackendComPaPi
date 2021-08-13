@@ -17,13 +17,7 @@ class PostController extends Controller
     public function index()
     {
         $posts = Post::all();
-        $response = [
-            'success' => true,
-            'data' => PostResource::collection($posts),
-            'message' => 'post successfully recived',
-        ];
-
-        return response()->json($response, 200);
+        return $this->errorResponse(PostResource::collection($posts), 'post successfully recived');
     }
 
     /**
@@ -51,19 +45,10 @@ class PostController extends Controller
         ]);
 
         if ($validator->fails()) {
-            $response = [
-                'success' => true,
-                'message' => $validator->errors(),
-            ];
-            return response()->json($response, 403);
+            return $this->errorResponse("Validation Error", $validator->errors());
         } else {
             $post = Post::create($input);
-            $response = [
-                'success' => true,
-                'data' => new PostResource($post),
-                'message' => 'post successfully created',
-            ];
-            return response()->json($response, 200);
+            return $this->successResponse(new PostResource($post), 'post successfully created');
         }
     }
 
